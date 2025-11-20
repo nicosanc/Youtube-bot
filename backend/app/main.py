@@ -62,17 +62,18 @@ async def process_analysis(job_id: str, urls: list[str]):
 @app.get('/auth/login')
 def login():
     """Initiate OAuth flow"""
-    redirect_uri = "http://localhost:8000/auth/callback"
+    redirect_uri = f"{settings.BACKEND_URL}/auth/callback"
     auth_url, state = get_authorization_url(redirect_uri)
     return {"auth_url": auth_url}
 
 @app.get('/auth/callback')
 def callback(code: str):
     """Handle OAuth callback"""
-    redirect_uri = "http://localhost:8000/auth/callback"
+    redirect_uri = f"{settings.BACKEND_URL}/auth/callback"
     credentials = exchange_code_for_token(code, redirect_uri)
     # Redirect to frontend
-    return RedirectResponse(url="http://localhost:5173?auth=success")
+    frontend_url = "https://youtube-analytics-bot.vercel.app" if "render.com" in settings.BACKEND_URL else "http://localhost:5173"
+    return RedirectResponse(url=f"{frontend_url}?auth=success")
 
 @app.get('/auth/status')
 def auth_status():
