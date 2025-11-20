@@ -15,7 +15,8 @@ app = FastAPI()
 
 origins = [
     "http://localhost:5173",  # Vite dev server
-    "https://your-vercel-app.vercel.app",  # Add later when deployed
+    "https://youtube-bot-m3ga.onrender.com",  # Backend URL (for local testing)
+    "*"  # Allow all origins for now, tighten later with Vercel URL
 ]
 
 app.add_middleware(
