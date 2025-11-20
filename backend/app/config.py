@@ -3,7 +3,7 @@ from pydantic import Field
 
 class Settings(BaseSettings):
     YOUTUBE_API_KEY: str
-    GOOGLE_SERVICE_ACCOUNT_JSON: str
+    GOOGLE_CLIENT_SECRET_JSON: str = "./client_secret.json"  # Default for local
     GOOGLE_DRIVE_FOLDER_ID: str
     
     class Config:

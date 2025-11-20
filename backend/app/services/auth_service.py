@@ -3,6 +3,7 @@ from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 import json
 import os
+from app.config import settings
 
 SCOPES = ['https://www.googleapis.com/auth/drive.file']
 TOKEN_FILE = './tokens.json'
@@ -10,7 +11,7 @@ TOKEN_FILE = './tokens.json'
 def get_authorization_url(redirect_uri: str) -> str:
     """Generate OAuth authorization URL"""
     flow = Flow.from_client_secrets_file(
-        './client_secret.json',
+        settings.GOOGLE_CLIENT_SECRET_JSON,
         scopes=SCOPES,
         redirect_uri=redirect_uri
     )
@@ -23,7 +24,7 @@ def get_authorization_url(redirect_uri: str) -> str:
 def exchange_code_for_token(code: str, redirect_uri: str):
     """Exchange authorization code for tokens"""
     flow = Flow.from_client_secrets_file(
-        './client_secret.json',
+        settings.GOOGLE_CLIENT_SECRET_JSON,
         scopes=SCOPES,
         redirect_uri=redirect_uri
     )
