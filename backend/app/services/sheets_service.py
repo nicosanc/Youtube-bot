@@ -30,11 +30,11 @@ def send_excel_to_drive(data: dict) -> str:
     last_col = ws.max_column + 1
     ws.cell(row=1, column=last_col, value='CPM')
     
-    # Add CPM formula for each data row (formula: Price / (Total Views / 1000))
-    # Price is in column J (10th column), Total Views is in column C (3rd column)
+    # Add CPM formula for each data row (formula: Price / (Avg Views / 1000))
+    # Price is in column J (10th column), Avg Views is in column B (2nd column)
     for row in range(2, ws.max_row + 1):
         price_col = chr(64 + 10)  # J
-        views_col = chr(64 + 3)   # C
+        views_col = chr(64 + 2)   # B (Avg Views)
         formula = f'=IF({price_col}{row}=0, "", {price_col}{row}/({views_col}{row}/1000))'
         ws.cell(row=row, column=last_col, value=formula)
     
