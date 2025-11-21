@@ -152,34 +152,37 @@ function App() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" style={{fontFamily: 'Arial, sans-serif'}}>
+      <div className="h-screen flex items-center justify-center" style={{fontFamily: 'Arial, sans-serif', backgroundColor: '#000000', margin: 0, padding: 0}}>
         <div className="text-gray-300">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-800 to-gray-900 py-12 px-4" style={{fontFamily: 'Arial, sans-serif'}}>
-      <div className="max-w-3xl mx-auto">
-        {/* Header */}
-        <div className="text-center mb-12">
+    <div className="h-screen grid grid-cols-2" style={{fontFamily: 'Arial, sans-serif', backgroundColor: '#000000', color: '#ffffff', margin: 0, padding: 0, overflow: 'hidden'}}>
+      {/* Left Half - Branding */}
+      <div className="flex items-center justify-center" style={{backgroundColor: '#000000'}}>
+        <div className="text-center px-8">
           <img 
             src={beeStingerLogo} 
             alt="Bee Stinger Brands" 
-            className="mx-auto mb-6 h-24 w-auto"
+            className="mx-auto mb-6"
+            style={{maxWidth: '300px', height: 'auto'}}
           />
-          <h1 className="text-4xl font-bold text-white mb-3">
+          <h1 className="text-4xl font-bold text-white mb-4">
             Bee Stinger YouTube Analysis Bot
           </h1>
-          <p className="text-gray-300">
+          <p className="text-white text-lg">
             Analyze YouTube channels and export metrics to Google Drive
           </p>
         </div>
+      </div>
 
-        {/* Main Card */}
-        <div className="bg-gray-700 rounded-2xl shadow-xl p-8">
-          {!authenticated ? (
-            <div className="text-center py-12">
+      {/* Right Half - Functionality */}
+      <div className="flex flex-col p-8 gap-4" style={{backgroundColor: '#000000', maxHeight: '100vh', overflow: 'hidden'}}>
+        {!authenticated ? (
+          <div className="flex items-center justify-center h-full">
+            <div className="text-center p-8">
               <h2 className="text-2xl font-semibold text-white mb-4">
                 Connect Your Google Account
               </h2>
@@ -199,99 +202,100 @@ function App() {
                 Sign in with Google
               </button>
             </div>
-          ) : (
+          </div>
+        ) : (
           <>
-            <form onSubmit={handleSubmit}>
-              <label htmlFor="urls" className="block text-sm font-semibold text-white mb-3">
-                Input YouTube Channel URL's below. One per row
-              </label>
-              <textarea
-                id="urls"
-                value={urls}
-                onChange={(e) => setUrls(e.target.value)}
-                placeholder="https://www.youtube.com/@channel1&#10;https://www.youtube.com/@channel2&#10;https://www.youtube.com/@channel3"
-                className="w-full h-40 px-4 py-3 border border-gray-600 bg-gray-800 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none resize-none text-white placeholder-gray-400"
-                disabled={loading}
-                required
-              />
+            {/* Input Section - Top */}
+            <div className="p-6" style={{backgroundColor: '#2a2a2a', borderRadius: '8px'}}>
+              <form onSubmit={handleSubmit}>
+                <label htmlFor="urls" className="block text-sm font-semibold text-white text-center" style={{marginBottom: '24px'}}>
+                  Input YouTube Channel URL's below. One per row
+                </label>
+                <textarea
+                  id="urls"
+                  value={urls}
+                  onChange={(e) => setUrls(e.target.value)}
+                  placeholder="https://www.youtube.com/@channel1&#10;https://www.youtube.com/@channel2&#10;https://www.youtube.com/@channel3"
+                  className="w-full px-4 py-3 rounded-lg focus:ring-2 focus:ring-yellow-500 outline-none resize-none placeholder-gray-500"
+                  style={{backgroundColor: '#333333', height: '180px', border: 'none', color: '#ffffff'}}
+                  disabled={loading}
+                  required
+                />
 
-              <button
-                type="submit"
-                disabled={loading || !urls.trim()}
-                className="mt-6 w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
-              >
-                {loading ? 'Processing...' : 'Analyze Channels'}
-              </button>
-            </form>
+                <button
+                  type="submit"
+                  disabled={loading || !urls.trim()}
+                  className="mt-4 w-full bg-yellow-500 hover:bg-yellow-600 disabled:opacity-50 disabled:cursor-not-allowed text-gray-900 font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+                >
+                  {loading ? 'Processing...' : 'Analyze Channels'}
+                </button>
+              </form>
 
-            {/* Error Display */}
-          {error && (
-            <div className="mt-6 p-4 bg-red-900 border border-red-700 rounded-lg">
-              <p className="text-red-200 text-sm font-medium">Error: {error}</p>
-            </div>
-          )}
-
-          {/* Status Display */}
-          {status && status.tasks && (
-            <div className="mt-6 p-6 bg-gray-800 border border-gray-600 rounded-lg">
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-sm font-semibold text-white">Task Status</span>
-                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  status.overall_status === 'processing' ? 'bg-yellow-500 text-gray-900' :
-                  status.overall_status === 'complete' ? 'bg-green-500 text-gray-900' :
-                  'bg-red-500 text-white'
-                }`}>
-                  {status.overall_status}
-                </span>
-              </div>
-
-              {/* Individual Task List */}
-              <div className="space-y-2">
-                {status.tasks.map((task) => (
-                  <div key={task.task_number} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
-                    <span className="text-white font-medium">Task {task.task_number}</span>
-                    <div className="flex items-center gap-3">
-                      <span className={`px-2 py-1 rounded text-xs font-medium ${
-                        task.status === 'queue' ? 'bg-gray-600 text-gray-300' :
-                        task.status === 'working' ? 'bg-yellow-500 text-gray-900' :
-                        task.status === 'done' ? 'bg-green-500 text-gray-900' :
-                        'bg-red-500 text-white'
-                      }`}>
-                        {task.status === 'queue' ? 'Queue' :
-                         task.status === 'working' ? 'Working' :
-                         task.status === 'done' ? 'Done' :
-                         'Failed'}
-                      </span>
-                      {task.status === 'done' && task.sheet_url && (
-                        <a
-                          href={task.sheet_url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-yellow-500 hover:text-yellow-400 text-xs font-medium"
-                        >
-                          Open
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              {status.overall_status === 'complete' && (
-                <p className="text-green-400 text-sm mt-4 text-center">
-                  All tasks complete! Files saved to Google Drive.
-                </p>
+              {/* Error Display */}
+              {error && (
+                <div className="mt-4 p-4 rounded-lg" style={{backgroundColor: '#2d1515'}}>
+                  <p className="text-red-300 text-sm font-medium">Error: {error}</p>
+                </div>
               )}
             </div>
-          )}
-          </>
-          )}
-        </div>
 
-        {authenticated && (
-          <div className="mt-8 text-center text-sm text-gray-400">
-            <p>Results will be saved to your Google Drive</p>
-          </div>
+            {/* Status Section - Bottom */}
+            <div className="p-4 flex-1" style={{backgroundColor: '#2a2a2a', borderRadius: '8px', overflow: 'auto', minHeight: '300px'}}>
+              {status && status.tasks ? (
+                <div className="p-4 rounded-lg" style={{backgroundColor: '#4a4a4a', border: '2px solid #5a5a5a'}}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-white">Task Status</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      status.overall_status === 'processing' ? 'bg-yellow-500 text-black' :
+                      status.overall_status === 'complete' ? 'bg-green-500 text-black' :
+                      'bg-red-500 text-white'
+                    }`}>
+                      {status.overall_status}
+                    </span>
+                  </div>
+
+                  {/* Individual Task List */}
+                  <div className="space-y-1.5">
+                    {status.tasks.map((task) => (
+                      <div key={task.task_number} className="flex items-center justify-between p-2 rounded-lg" style={{backgroundColor: '#5a5a5a'}}>
+                        <span className="text-white font-medium">Task {task.task_number}</span>
+                        <span className={`px-2 py-1 rounded text-xs font-medium ${
+                          task.status === 'queue' ? 'bg-gray-700 text-gray-300' :
+                          task.status === 'working' ? 'bg-yellow-500 text-black' :
+                          task.status === 'done' ? 'bg-green-500 text-black' :
+                          'bg-red-500 text-white'
+                        }`}>
+                          {task.status === 'queue' ? 'Queue' :
+                           task.status === 'working' ? 'Working' :
+                           task.status === 'done' ? 'Done' :
+                           'Failed'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {status.overall_status === 'complete' && status.tasks.length > 0 && status.tasks[0].sheet_url && (
+                    <div className="mt-4">
+                      <a
+                        href={status.tasks[0].sheet_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-lg transition-colors duration-200 text-center"
+                      >
+                        Open Results in Google Drive
+                      </a>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center h-full">
+                  <div className="text-center text-gray-400">
+                    Task status will appear here
+                  </div>
+                </div>
+              )}
+            </div>
+          </>
         )}
       </div>
     </div>

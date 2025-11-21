@@ -57,7 +57,9 @@ def analyze_urls(request: AnalyzeRequest, background_tasks: BackgroundTasks, aut
     return JobResponse(job_id=job_id)
 
 async def process_analysis(job_id: str, urls: list[str], user_email: str):
-    # Process each URL as a separate task
+    # Process each URL and collect metrics
+    all_metrics = []
+    
     for task_number, url in enumerate(urls, start=1):
         try:
             # Mark task as working
@@ -67,18 +69,31 @@ async def process_analysis(job_id: str, urls: list[str], user_email: str):
             channel = get_channel_id(url)
             channel_stats = get_channel_stats(channel)
             metrics = calculate_metrics(channel_stats)
+            all_metrics.append(metrics)
             
-            # Send to Drive
-            sheet_url = send_excel_to_drive([metrics], user_email)
-            
-            # Mark task as done
-            update_task(job_id, task_number, status="done", sheet_url=sheet_url)
-            print(f"Task {task_number} completed for job {job_id}")
+            # Mark task as done (but don't send to Drive yet)
+            update_task(job_id, task_number, status="done")
+            print(f"Task {task_number} analyzed for job {job_id}")
             
         except Exception as e:
             # Mark task as failed
             update_task(job_id, task_number, status="failed", error=str(e))
             print(f"Task {task_number} failed for job {job_id}: {e}")
+    
+    # After all channels are analyzed, create ONE file with all metrics
+    if all_metrics:
+        try:
+            sheet_url = send_excel_to_drive(all_metrics, user_email)
+            # Update all successful tasks with the same sheet URL
+            for task_number in range(1, len(urls) + 1):
+                job = get_job(job_id)
+                if job:
+                    for task in job["tasks"]:
+                        if task["task_number"] == task_number and task["status"] == "done":
+                            update_task(job_id, task_number, status="done", sheet_url=sheet_url)
+            print(f"All metrics saved to Drive for job {job_id}")
+        except Exception as e:
+            print(f"Failed to save to Drive for job {job_id}: {e}")
     
     
 @app.get('/auth/login')
