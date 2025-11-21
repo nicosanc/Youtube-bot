@@ -25,7 +25,9 @@ function App() {
 
   const checkAuthStatus = async () => {
     try {
-      const response = await fetch(`${API_URL}/auth/status`)
+      const response = await fetch(`${API_URL}/auth/status`, {
+        credentials: 'include'  // Send cookies with request
+      })
       const data = await response.json()
       setAuthenticated(data.authenticated)
     } catch (err) {
@@ -37,7 +39,9 @@ function App() {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`)
+      const response = await fetch(`${API_URL}/auth/login`, {
+        credentials: 'include'  // Send cookies with request
+      })
       const data = await response.json()
       window.location.href = data.auth_url
     } catch (err) {
@@ -60,6 +64,7 @@ function App() {
         headers: {
           'Content-Type': 'application/json',
         },
+        credentials: 'include',  // Send cookies with request
         body: JSON.stringify({ urls: urlList }),
       })
 
@@ -79,7 +84,9 @@ function App() {
   const pollStatus = async (id) => {
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`${API_URL}/status/${id}`)
+        const response = await fetch(`${API_URL}/status/${id}`, {
+          credentials: 'include'  // Send cookies with request
+        })
         const data = await response.json()
         
         setStatus(data)
