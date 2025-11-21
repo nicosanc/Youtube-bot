@@ -9,7 +9,7 @@ from urllib.parse import urlparse
 from app.services.youtube_service import get_channel_id, get_channel_stats
 from app.services.metrics_calculator import calculate_metrics
 from app.services.sheets_service import send_excel_to_drive
-from app.services.auth_service import get_authorization_url, exchange_code_for_token, load_credentials_for_user, get_user_email
+from app.services.auth_service import get_authorization_url, exchange_code_for_token, load_credentials, get_user_email
 from fastapi.responses import RedirectResponse
 
 app = FastAPI()
@@ -97,7 +97,7 @@ def auth_status(request: Request):
     user_email = request.session.get('user_email')
     if not user_email:
         return {"authenticated": False}
-    credentials = load_credentials_for_user(user_email)
+    credentials = load_credentials(user_email)
     return {"authenticated": credentials is not None}
 
 
