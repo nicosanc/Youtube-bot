@@ -4,6 +4,7 @@ import beeStingerLogo from './assets/bee_stinger.png'
 function App() {
   const [urls, setUrls] = useState('')
   const [jobId, setJobId] = useState(null)
+  const [taskNumber, setTaskNumber] = useState(null)
   const [status, setStatus] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
@@ -123,6 +124,7 @@ function App() {
 
       const data = await response.json()
       setJobId(data.job_id)
+      setTaskNumber(data.task_number)
       pollStatus(data.job_id)
     } catch (err) {
       setError(err.message)
@@ -138,7 +140,7 @@ function App() {
         
         setStatus(data)
 
-        if (data.status === 'complete' || data.status === 'failed') {
+        if (data.overall_status === 'complete' || data.overall_status === 'failed') {
           clearInterval(interval)
           setLoading(false)
         }
@@ -242,64 +244,61 @@ function App() {
             {/* Status Section - Bottom */}
             <div className="p-4 flex-1" style={{backgroundColor: '#2a2a2a', borderRadius: '8px', overflow: 'auto', minHeight: '300px'}}>
               {status && status.tasks ? (
-                <div className="p-6 rounded-lg flex flex-col items-center justify-center h-full" style={{backgroundColor: '#4a4a4a', border: '2px solid #5a5a5a'}}>
-                  {/* Calculate progress */}
-                  {(() => {
-                    const completed = status.tasks.filter(t => t.status === 'done' || t.status === 'failed').length;
-                    const total = status.tasks.length;
-                    const failed = status.tasks.filter(t => t.status === 'failed').length;
-                    
-                    return (
-                      <>
-                        <div className="text-center mb-6">
-                          <div className={`inline-block px-4 py-2 rounded-full text-sm font-semibold mb-4 ${
-                            status.overall_status === 'processing' ? 'bg-yellow-500 text-black' :
-                            status.overall_status === 'complete' ? 'bg-green-500 text-black' :
-                            'bg-red-500 text-white'
-                          }`}>
-                            {status.overall_status === 'processing' ? 'Processing' :
-                             status.overall_status === 'complete' ? 'Complete' :
-                             'Failed'}
-                          </div>
-                          
-                          <div className="text-white text-2xl font-bold mb-2">
-                            {completed} of {total} channels processed
-                          </div>
-                          
-                          {failed > 0 && (
-                            <div className="text-red-400 text-sm">
-                              {failed} failed
-                            </div>
-                          )}
-                        </div>
+                <div className="p-4 rounded-lg" style={{backgroundColor: '#4a4a4a', border: '2px solid #5a5a5a'}}>
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-semibold text-white">Task {taskNumber} Status</span>
+                    <span className={`px-2 py-1 rounded-full text-xs font-medium ${
+                      status.overall_status === 'processing' ? 'bg-yellow-500 text-black' :
+                      status.overall_status === 'complete' ? 'bg-green-500 text-black' :
+                      'bg-red-500 text-white'
+                    }`}>
+                      {status.overall_status}
+                    </span>
+                  </div>
 
-                        {/* Progress Bar */}
-                        <div className="w-full max-w-md mb-6">
-                          <div className="w-full bg-gray-700 rounded-full h-3">
-                            <div 
-                              className={`h-3 rounded-full transition-all duration-300 ${
-                                status.overall_status === 'complete' ? 'bg-green-500' : 'bg-yellow-500'
-                              }`}
-                              style={{width: `${(completed / total) * 100}%`}}
-                            ></div>
-                          </div>
-                        </div>
+                  {/* Progress indicator */}
+                  {status.overall_status === 'processing' && (
+                    <div className="mb-3 text-white text-sm">
+                      Processing channels...
+                    </div>
+                  )}
 
-                        {status.overall_status === 'complete' && status.tasks.length > 0 && status.tasks[0].sheet_url && (
-                          <div className="w-full max-w-md">
-                            <a
-                              href={status.tasks[0].sheet_url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="block w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-lg transition-colors duration-200 text-center"
-                            >
-                              Open Results in Google Drive
-                            </a>
-                          </div>
-                        )}
-                      </>
-                    );
-                  })()}
+                  {status.overall_status === 'complete' && (
+                    <div className="mb-3 text-green-400 text-sm font-medium">
+                      ✓ Analysis complete
+                    </div>
+                  )}
+
+                  {status.overall_status === 'complete' && status.tasks.length > 0 && status.tasks[0].sheet_url && (
+                    <div className="mt-4 space-y-2">
+                      <a
+                        href={status.tasks[0].sheet_url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="block w-full bg-yellow-500 hover:bg-yellow-600 text-black font-semibold py-3 px-6 rounded-lg transition-colors duration-200 text-center"
+                      >
+                        Open Results in Google Drive
+                      </a>
+                      <button
+                        onClick={() => {
+                          setUrls('')
+                          setJobId(null)
+                          setTaskNumber(null)
+                          setStatus(null)
+                          setError(null)
+                        }}
+                        className="block w-full bg-gray-700 hover:bg-gray-600 text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200 text-center"
+                      >
+                        Start New Analysis
+                      </button>
+                    </div>
+                  )}
+
+                  {status.overall_status === 'failed' && (
+                    <div className="p-3 bg-red-900 rounded-lg text-white text-sm">
+                      Error: {status.tasks[0]?.error || 'Unknown error occurred'}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <div className="flex items-center justify-center h-full">
