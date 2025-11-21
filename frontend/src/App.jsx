@@ -8,30 +8,64 @@ function App() {
   const [error, setError] = useState(null)
   const [authenticated, setAuthenticated] = useState(false)
   const [checkingAuth, setCheckingAuth] = useState(true)
+  const [authToken, setAuthToken] = useState(localStorage.getItem('auth_token'))
 
   const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:8000'
+
+  // Listen for OAuth callback message
+  useEffect(() => {
+    const handleMessage = (event) => {
+      // Only accept messages from our backend
+      const allowedOrigins = [
+        'http://localhost:8000',
+        'https://youtube-bot-m3ga.onrender.com'
+      ]
+      
+      if (!allowedOrigins.includes(event.origin)) {
+        return
+      }
+      
+      if (event.data.type === 'auth_success' && event.data.token) {
+        const token = event.data.token
+        localStorage.setItem('auth_token', token)
+        setAuthToken(token)
+        setAuthenticated(true)
+      }
+    }
+
+    window.addEventListener('message', handleMessage)
+    return () => window.removeEventListener('message', handleMessage)
+  }, [])
 
   // Check authentication status on mount
   useEffect(() => {
     checkAuthStatus()
-    
-    // Check if redirected back from OAuth
-    const params = new URLSearchParams(window.location.search)
-    if (params.get('auth') === 'success') {
-      setAuthenticated(true)
-      window.history.replaceState({}, '', '/')
-    }
-  }, [])
+  }, [authToken])
 
   const checkAuthStatus = async () => {
     try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        setAuthenticated(false)
+        setCheckingAuth(false)
+        return
+      }
+
       const response = await fetch(`${API_URL}/auth/status`, {
-        credentials: 'include'  // Send cookies with request
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       })
       const data = await response.json()
       setAuthenticated(data.authenticated)
+      
+      if (!data.authenticated) {
+        localStorage.removeItem('auth_token')
+        setAuthToken(null)
+      }
     } catch (err) {
       console.error('Failed to check auth status:', err)
+      setAuthenticated(false)
     } finally {
       setCheckingAuth(false)
     }
@@ -39,11 +73,20 @@ function App() {
 
   const handleLogin = async () => {
     try {
-      const response = await fetch(`${API_URL}/auth/login`, {
-        credentials: 'include'  // Send cookies with request
-      })
+      const response = await fetch(`${API_URL}/auth/login`)
       const data = await response.json()
-      window.location.href = data.auth_url
+      
+      // Open OAuth in popup window
+      const width = 500
+      const height = 600
+      const left = window.screen.width / 2 - width / 2
+      const top = window.screen.height / 2 - height / 2
+      
+      window.open(
+        data.auth_url,
+        'oauth',
+        `width=${width},height=${height},left=${left},top=${top}`
+      )
     } catch (err) {
       setError('Failed to initiate login')
     }
@@ -57,14 +100,19 @@ function App() {
     setJobId(null)
 
     try {
+      const token = localStorage.getItem('auth_token')
+      if (!token) {
+        throw new Error('Not authenticated')
+      }
+
       const urlList = urls.split('\n').filter(url => url.trim())
       
       const response = await fetch(`${API_URL}/analyze`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
-        credentials: 'include',  // Send cookies with request
         body: JSON.stringify({ urls: urlList }),
       })
 
@@ -84,9 +132,7 @@ function App() {
   const pollStatus = async (id) => {
     const interval = setInterval(async () => {
       try {
-        const response = await fetch(`${API_URL}/status/${id}`, {
-          credentials: 'include'  // Send cookies with request
-        })
+        const response = await fetch(`${API_URL}/status/${id}`)
         const data = await response.json()
         
         setStatus(data)
