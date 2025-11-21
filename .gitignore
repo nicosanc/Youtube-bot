@@ -29,10 +29,23 @@ wheels/
 .env.*.local
 
 # Credentials and secrets
-credentials.json
-client_secret.json
-tokens.json
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!jsconfig.json
+!vercel.json
 tokens/
+backend/tokens/
+**/tokens/
+backend/credentials.json
+backend/client_secret.json
+**/credentials.json
+**/client_secret.json
+*.pem
+*.key
+*.p12
+*.pfx
 
 # IDE
 .vscode/
