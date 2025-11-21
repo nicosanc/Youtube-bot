@@ -32,6 +32,13 @@ wheels/
 credentials.json
 client_secret.json
 tokens.json
+tokens/
+backend/tokens/
+backend/credentials.json
+backend/client_secret.json
+**/tokens/
+**/credentials.json
+**/client_secret.json
 
 # IDE
 .vscode/
