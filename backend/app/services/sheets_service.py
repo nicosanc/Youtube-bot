@@ -7,6 +7,34 @@ from app.services.auth_service import load_credentials
 from app.config import settings
 from openpyxl import load_workbook
 
+def get_or_create_daily_folder(drive, parent_folder_id: str) -> str:
+    """Find or create today's folder (format: mm-dd-yyyy)"""
+    today = datetime.datetime.now().strftime('%m-%d-%Y')
+    
+    # Search for today's folder
+    query = f"name='{today}' and '{parent_folder_id}' in parents and mimeType='application/vnd.google-apps.folder' and trashed=false"
+    results = drive.files().list(q=query, fields='files(id, name)').execute()
+    folders = results.get('files', [])
+    
+    if folders:
+        return folders[0]['id']
+    
+    # Create folder if it doesn't exist
+    folder_metadata = {
+        'name': today,
+        'mimeType': 'application/vnd.google-apps.folder',
+        'parents': [parent_folder_id]
+    }
+    folder = drive.files().create(body=folder_metadata, fields='id').execute()
+    return folder['id']
+
+def get_next_task_number(drive, folder_id: str) -> int:
+    """Count existing files in folder and return next task number"""
+    query = f"'{folder_id}' in parents and trashed=false"
+    results = drive.files().list(q=query, fields='files(id)').execute()
+    files = results.get('files', [])
+    return len(files) + 1
+
 def send_excel_to_drive(data: dict, user_email: str) -> str:
     # Load user's OAuth credentials
     credentials = load_credentials(user_email)
@@ -16,9 +44,15 @@ def send_excel_to_drive(data: dict, user_email: str) -> str:
     # Build Drive service with user's credentials
     drive = build('drive', 'v3', credentials=credentials)
     
+    # Get or create today's folder
+    daily_folder_id = get_or_create_daily_folder(drive, settings.GOOGLE_DRIVE_FOLDER_ID)
+    
+    # Get next task number
+    task_number = get_next_task_number(drive, daily_folder_id)
+    
     # Create DataFrame and Excel file
     df = pd.DataFrame(data)
-    filename = f"youtube_analytics_{datetime.datetime.now().strftime('%Y-%m-%d_%H-%M')}.xlsx"
+    filename = f"Task {task_number} Output.xlsx"
     filepath = f"/tmp/{filename}"
     df.to_excel(filepath, index=False)
     
@@ -40,16 +74,16 @@ def send_excel_to_drive(data: dict, user_email: str) -> str:
     
     wb.save(filepath)
     
-    # Upload to shared folder
+    # Upload to today's folder (not main folder)
     file_metadata = {
         'name': filename,
-        'parents': [settings.GOOGLE_DRIVE_FOLDER_ID]
+        'parents': [daily_folder_id]
     }
     
     media = MediaFileUpload(filepath, mimetype='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     file = drive.files().create(body=file_metadata, media_body=media, fields='id').execute()
     os.remove(filepath)
     
-    print(f"File uploaded to user's Drive: {file.get('id')}")
+    print(f"File uploaded: {filename} to folder {daily_folder_id}")
     
     return f"https://drive.google.com/file/d/{file.get('id')}/view"

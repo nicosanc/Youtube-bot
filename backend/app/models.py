@@ -7,8 +7,13 @@ class AnalyzeRequest(BaseModel):
 class JobResponse(BaseModel):
     job_id: str
 
-class StatusResponse(BaseModel):
-    status: Literal['processing', 'complete', 'failed']
+class TaskStatus(BaseModel):
+    task_number: int
+    status: Literal['queue', 'working', 'done', 'failed']
     sheet_url: Optional[str] = None
     error: Optional[str] = None
+
+class StatusResponse(BaseModel):
+    overall_status: Literal['processing', 'complete', 'failed']
+    tasks: List[TaskStatus]
 

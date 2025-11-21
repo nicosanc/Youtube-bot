@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import beeStingerLogo from './assets/bee_stinger.png'
 
 function App() {
   const [urls, setUrls] = useState('')
@@ -151,38 +152,43 @@ function App() {
 
   if (checkingAuth) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 flex items-center justify-center">
-        <div className="text-slate-600">Loading...</div>
+      <div className="min-h-screen bg-gradient-to-br from-gray-800 to-gray-900 flex items-center justify-center" style={{fontFamily: 'Arial, sans-serif'}}>
+        <div className="text-gray-300">Loading...</div>
       </div>
     )
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-gray-800 to-gray-900 py-12 px-4" style={{fontFamily: 'Arial, sans-serif'}}>
       <div className="max-w-3xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-3">
-            YouTube Analytics Bot
+          <img 
+            src={beeStingerLogo} 
+            alt="Bee Stinger Brands" 
+            className="mx-auto mb-6 h-24 w-auto"
+          />
+          <h1 className="text-4xl font-bold text-white mb-3">
+            Bee Stinger YouTube Analysis Bot
           </h1>
-          <p className="text-slate-600">
+          <p className="text-gray-300">
             Analyze YouTube channels and export metrics to Google Drive
           </p>
         </div>
 
         {/* Main Card */}
-        <div className="bg-white rounded-2xl shadow-xl p-8">
+        <div className="bg-gray-700 rounded-2xl shadow-xl p-8">
           {!authenticated ? (
             <div className="text-center py-12">
-              <h2 className="text-2xl font-semibold text-slate-900 mb-4">
+              <h2 className="text-2xl font-semibold text-white mb-4">
                 Connect Your Google Account
               </h2>
-              <p className="text-slate-600 mb-8">
+              <p className="text-gray-300 mb-8">
                 Sign in with Google to save analytics reports to your Drive
               </p>
               <button
                 onClick={handleLogin}
-                className="inline-flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors duration-200"
+                className="inline-flex items-center px-6 py-3 bg-yellow-500 hover:bg-yellow-600 text-gray-900 font-semibold rounded-lg transition-colors duration-200"
               >
                 <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" fill="currentColor">
                   <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
@@ -196,15 +202,15 @@ function App() {
           ) : (
           <>
             <form onSubmit={handleSubmit}>
-              <label htmlFor="urls" className="block text-sm font-semibold text-slate-700 mb-3">
-                YouTube Channel URLs
+              <label htmlFor="urls" className="block text-sm font-semibold text-white mb-3">
+                Input YouTube Channel URL's below. One per row
               </label>
               <textarea
                 id="urls"
                 value={urls}
                 onChange={(e) => setUrls(e.target.value)}
-                placeholder="Paste YouTube channel URLs (one per line)&#10;https://www.youtube.com/@channel1&#10;https://www.youtube.com/@channel2"
-                className="w-full h-40 px-4 py-3 border border-slate-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none resize-none text-slate-900 placeholder-slate-400"
+                placeholder="https://www.youtube.com/@channel1&#10;https://www.youtube.com/@channel2&#10;https://www.youtube.com/@channel3"
+                className="w-full h-40 px-4 py-3 border border-gray-600 bg-gray-800 rounded-lg focus:ring-2 focus:ring-yellow-500 focus:border-transparent outline-none resize-none text-white placeholder-gray-400"
                 disabled={loading}
                 required
               />
@@ -212,7 +218,7 @@ function App() {
               <button
                 type="submit"
                 disabled={loading || !urls.trim()}
-                className="mt-6 w-full bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
+                className="mt-6 w-full bg-yellow-500 hover:bg-yellow-600 disabled:bg-gray-600 disabled:cursor-not-allowed text-gray-900 font-semibold py-3 px-6 rounded-lg transition-colors duration-200"
               >
                 {loading ? 'Processing...' : 'Analyze Channels'}
               </button>
@@ -220,53 +226,60 @@ function App() {
 
             {/* Error Display */}
           {error && (
-            <div className="mt-6 p-4 bg-red-50 border border-red-200 rounded-lg">
-              <p className="text-red-800 text-sm font-medium">Error: {error}</p>
+            <div className="mt-6 p-4 bg-red-900 border border-red-700 rounded-lg">
+              <p className="text-red-200 text-sm font-medium">Error: {error}</p>
             </div>
           )}
 
           {/* Status Display */}
-          {status && (
-            <div className="mt-6 p-6 bg-slate-50 border border-slate-200 rounded-lg">
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-semibold text-slate-700">Status</span>
+          {status && status.tasks && (
+            <div className="mt-6 p-6 bg-gray-800 border border-gray-600 rounded-lg">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-sm font-semibold text-white">Task Status</span>
                 <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                  status.status === 'processing' ? 'bg-blue-100 text-blue-700' :
-                  status.status === 'complete' ? 'bg-green-100 text-green-700' :
-                  'bg-red-100 text-red-700'
+                  status.overall_status === 'processing' ? 'bg-yellow-500 text-gray-900' :
+                  status.overall_status === 'complete' ? 'bg-green-500 text-gray-900' :
+                  'bg-red-500 text-white'
                 }`}>
-                  {status.status}
+                  {status.overall_status}
                 </span>
               </div>
 
-              {status.status === 'processing' && (
-                <p className="text-slate-600 text-sm mt-3">
-                  Analyzing channels and generating report...
-                </p>
-              )}
+              {/* Individual Task List */}
+              <div className="space-y-2">
+                {status.tasks.map((task) => (
+                  <div key={task.task_number} className="flex items-center justify-between p-3 bg-gray-700 rounded-lg">
+                    <span className="text-white font-medium">Task {task.task_number}</span>
+                    <div className="flex items-center gap-3">
+                      <span className={`px-2 py-1 rounded text-xs font-medium ${
+                        task.status === 'queue' ? 'bg-gray-600 text-gray-300' :
+                        task.status === 'working' ? 'bg-yellow-500 text-gray-900' :
+                        task.status === 'done' ? 'bg-green-500 text-gray-900' :
+                        'bg-red-500 text-white'
+                      }`}>
+                        {task.status === 'queue' ? 'Queue' :
+                         task.status === 'working' ? 'Working' :
+                         task.status === 'done' ? 'Done' :
+                         'Failed'}
+                      </span>
+                      {task.status === 'done' && task.sheet_url && (
+                        <a
+                          href={task.sheet_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-yellow-500 hover:text-yellow-400 text-xs font-medium"
+                        >
+                          Open
+                        </a>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
 
-              {status.status === 'complete' && status.sheet_url && (
-                <div className="mt-4">
-                  <p className="text-slate-600 text-sm mb-3">
-                    Analysis complete! Your report is ready.
-                  </p>
-                  <a
-                    href={status.sheet_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white text-sm font-medium rounded-lg transition-colors duration-200"
-                  >
-                    <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    Open Google Sheet
-                  </a>
-                </div>
-              )}
-
-              {status.status === 'failed' && (
-                <p className="text-red-600 text-sm mt-3">
-                  Analysis failed. Please try again or contact support.
+              {status.overall_status === 'complete' && (
+                <p className="text-green-400 text-sm mt-4 text-center">
+                  All tasks complete! Files saved to Google Drive.
                 </p>
               )}
             </div>
@@ -276,7 +289,7 @@ function App() {
         </div>
 
         {authenticated && (
-          <div className="mt-8 text-center text-sm text-slate-500">
+          <div className="mt-8 text-center text-sm text-gray-400">
             <p>Results will be saved to your Google Drive</p>
           </div>
         )}

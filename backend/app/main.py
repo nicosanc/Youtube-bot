@@ -3,7 +3,7 @@ from app.config import settings
 from app.models import AnalyzeRequest, JobResponse, StatusResponse
 import uuid
 from fastapi.middleware.cors import CORSMiddleware
-from app.services.job_manager import add_job, get_job, update_job
+from app.services.job_manager import add_job, get_job, update_task
 from urllib.parse import urlparse
 from app.services.youtube_service import get_channel_id, get_channel_stats
 from app.services.metrics_calculator import calculate_metrics
@@ -31,12 +31,12 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get('/status/{job_id}')
+@app.get('/status/{job_id}', response_model=StatusResponse)
 def get_status(job_id: str):
     job = get_job(job_id)
     if not job:
-        return StatusResponse(status="failed", error="Job not found")
-    return StatusResponse(**job)
+        return StatusResponse(overall_status="failed", tasks=[])
+    return StatusResponse(overall_status=job["overall_status"], tasks=job["tasks"])
 
 
 @app.post('/analyze', response_model=JobResponse)
@@ -50,26 +50,35 @@ def analyze_urls(request: AnalyzeRequest, background_tasks: BackgroundTasks, aut
     if not user_email:
         raise Exception("Invalid or expired token")
     
-    job_id= str(uuid.uuid4())
-    add_job(job_id, status="pending")
+    job_id = str(uuid.uuid4())
+    num_tasks = len(request.urls)
+    add_job(job_id, num_tasks=num_tasks)
     background_tasks.add_task(process_analysis, job_id, request.urls, user_email)
     return JobResponse(job_id=job_id)
 
 async def process_analysis(job_id: str, urls: list[str], user_email: str):
-    # get stats for each channel 
-    analyzed_results = []
-    try:
-        for url in urls:
+    # Process each URL as a separate task
+    for task_number, url in enumerate(urls, start=1):
+        try:
+            # Mark task as working
+            update_task(job_id, task_number, status="working")
+            
+            # Get channel stats
             channel = get_channel_id(url)
             channel_stats = get_channel_stats(channel)
             metrics = calculate_metrics(channel_stats)
-            analyzed_results.append(metrics)
-        print(f"Analyzed results for job {job_id}: {analyzed_results}")
-        sheet_url = send_excel_to_drive(analyzed_results, user_email)
-        update_job(job_id, status="complete", sheet_url=sheet_url, error=None)
-    except Exception as e:
-        update_job(job_id, status="failed", error=str(e))
-        print(f"Error processing job {job_id}: {e}")
+            
+            # Send to Drive
+            sheet_url = send_excel_to_drive([metrics], user_email)
+            
+            # Mark task as done
+            update_task(job_id, task_number, status="done", sheet_url=sheet_url)
+            print(f"Task {task_number} completed for job {job_id}")
+            
+        except Exception as e:
+            # Mark task as failed
+            update_task(job_id, task_number, status="failed", error=str(e))
+            print(f"Task {task_number} failed for job {job_id}: {e}")
     
     
 @app.get('/auth/login')
