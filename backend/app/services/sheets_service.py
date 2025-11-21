@@ -7,9 +7,9 @@ from app.services.auth_service import load_credentials
 from app.config import settings
 from openpyxl import load_workbook
 
-def send_excel_to_drive(data: dict) -> str:
+def send_excel_to_drive(data: dict, user_email: str) -> str:
     # Load user's OAuth credentials
-    credentials = load_credentials()
+    credentials = load_credentials(user_email)
     if not credentials:
         raise Exception("User not authenticated. Please login first.")
     
